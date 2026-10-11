@@ -1,0 +1,9 @@
+flask
+flask-sqlalchemy
+flask-login
+python-dotenv
+pillow
+numpy
+pymysql
+pytest
+tensorflow
