@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Deposit plastic</h3>
+<form method="post" enctype="multipart/form-data">
+  <label class="form-label">Where are you?</label>
+  <select class="form-select mb-3" name="location_id" required>
+    {% for l in locations %}
+      <option value="{{ l.id }}">{{ l.name }}</option>
+    {% endfor %}
+  </select>
+  <label class="form-label">Photo of the plastic item</label>
+  <input class="form-control mb-3" type="file" name="photo" accept="image/*" capture="environment" required>
+  <button class="btn btn-success w-100">Submit</button>
+</form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Hello, {{ current_user.name }}</h3>
+<div class="card p-3 mb-3 text-center">
+  <div class="text-muted">Your points</div>
+  <div class="display-4">{{ current_user.points }}</div>
+</div>
+<a class="btn btn-success w-100 mb-4" href="{{ url_for('main.deposit') }}">Deposit plastic</a>
+<h5>Recent deposits</h5>
+<ul class="list-group">
+  {% for d in deposits %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ d.plastic_type.replace('_', ' ') }} · {{ d.location.name }}</span>
+      <span>+{{ d.points_awarded }}</span>
+    </li>
+  {% else %}
+    <li class="list-group-item text-muted">No deposits yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
