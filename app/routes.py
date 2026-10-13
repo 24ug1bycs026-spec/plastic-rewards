@@ -101,28 +101,37 @@ def deposit():
             flash("Too many deposits this hour. Try later.", "danger")
             return redirect(url_for("main.deposit"))
 
-        path = os.path.join(current_app.config["UPLOAD_FOLDER"], f"{image_hash}.{ext}")
+        # ENSURE UPLOAD FOLDER EXISTS
+        upload_dir = current_app.config["UPLOAD_FOLDER"]
+        os.makedirs(upload_dir, exist_ok=True)
+
+        path = os.path.join(upload_dir, f"{image_hash}.{ext}")
         with open(path, "wb") as f:
             f.write(data)
 
-        label, confidence = predict(path)
+        try:
+            label, confidence = predict(path)
 
-        # Anti-cheat 3: low confidence
-        if confidence < current_app.config["CONFIDENCE_THRESHOLD"]:
-            os.remove(path)
-            flash("Not sure what this is. Please retake a clearer photo.", "warning")
-            return redirect(url_for("main.deposit"))
+            # Anti-cheat 3: low confidence
+            if confidence < current_app.config["CONFIDENCE_THRESHOLD"]:
+                flash("Not sure what this is. Please retake a clearer photo.", "warning")
+                return redirect(url_for("main.deposit"))
 
-        points = POINTS.get(label, 0)
-        dep = Deposit(user_id=current_user.id, location_id=location_id,
-                      plastic_type=label, confidence=confidence,
-                      points_awarded=points, image_hash=image_hash)
-        current_user.points += points
-        db.session.add(dep)
-        db.session.commit()
+            points = POINTS.get(label, 0)
+            dep = Deposit(user_id=current_user.id, location_id=location_id,
+                          plastic_type=label, confidence=confidence,
+                          points_awarded=points, image_hash=image_hash)
+            current_user.points += points
+            db.session.add(dep)
+            db.session.commit()
 
-        flash(f"Detected: {label.replace('_', ' ')} "
-              f"({confidence:.0%} sure). You earned {points} points!", "success")
-        return redirect(url_for("main.home"))
+            flash(f"Detected: {label.replace('_', ' ')} "
+                  f"({confidence:.0%} sure). You earned {points} points!", "success")
+            return redirect(url_for("main.home"))
+
+        finally:
+            # CLEANUP: Always remove temporary file safely if it exists
+            if os.path.exists(path):
+                os.remove(path)
 
     return render_template("deposit.html", locations=locations)
